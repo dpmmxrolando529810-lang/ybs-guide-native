@@ -7,12 +7,12 @@ on:
         description: 'Prerelease containing the Source ZIP'
         type: string
         required: true
-        default: 'source-v1.0.12'
+        default: 'source-v1.0.13'
       source_asset:
         description: 'Exact Source ZIP filename'
         type: string
         required: true
-        default: 'YBS-Guide-Source-v1.0.12.zip'
+        default: 'YBS-Guide-Source-v1.0.13.zip'
 
 permissions:
   contents: read
