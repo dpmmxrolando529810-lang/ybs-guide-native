@@ -30,7 +30,7 @@ def extract_checked(archive, destination, digest):
         for entry in entries:
             name = PurePosixPath(entry.filename)
             if (name.is_absolute() or str(name) != entry.filename or entry.is_dir() or
-                    '..' in name.parts or '\\\\' in entry.filename or
+                    '..' in name.parts or '\\' in entry.filename or
                     not name.parts or name.parts[0] != 'ybs-guide-native' or
                     'signing' in name.parts or 'tools' in name.parts or
                     stat.S_ISLNK(entry.external_attr >> 16) or entry.file_size > MAX_FILE):
