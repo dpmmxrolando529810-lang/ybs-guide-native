@@ -4,25 +4,25 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'New APK version (first online release: 1.0.12)'
+        description: 'A new, unused APK version, such as 1.0.13'
         type: string
         required: true
-        default: '1.0.12'
+        default: ''
       version_code:
         description: 'Leave empty to increase the version code automatically'
         type: string
         required: false
         default: ''
       source_tag:
-        description: 'Prerelease containing the Source ZIP'
+        description: 'Release containing the verified Source ZIP'
         type: string
         required: true
-        default: 'source-v1.0.11'
+        default: 'v1.0.12'
       source_asset:
         description: 'Exact Source ZIP filename'
         type: string
         required: true
-        default: 'YBS-Guide-Source-v1.0.11.zip'
+        default: 'YBS-Guide-Source-v1.0.12.zip'
       release_notes:
         description: 'Changes in this release'
         type: string
@@ -42,6 +42,16 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
+      - name: Check original signing configuration
+        env:
+          YBS_KEY_PRESENT: ${{ secrets.YBS_RELEASE_KEYSTORE_B64 != '' }}
+          YBS_PASSWORD_PRESENT: ${{ secrets.YBS_RELEASE_PASSWORD != '' }}
+        shell: bash
+        run: |
+          if [[ "$YBS_KEY_PRESENT" != "true" || "$YBS_PASSWORD_PRESENT" != "true" ]]; then
+            echo '::error::Configure the original YBS signing key and signing password in encrypted Actions secrets before publishing.'
+            exit 1
+          fi
       - name: Check out publisher files
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
