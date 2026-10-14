@@ -14,10 +14,10 @@ on:
         required: false
         default: ''
       source_tag:
-        description: 'Release containing the verified Source ZIP'
+        description: 'Prerelease containing the verified Source ZIP'
         type: string
         required: true
-        default: 'v1.0.12'
+        default: 'source-v1.0.12'
       source_asset:
         description: 'Exact Source ZIP filename'
         type: string
