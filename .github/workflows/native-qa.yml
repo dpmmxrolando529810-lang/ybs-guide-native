@@ -1,0 +1,82 @@
+name: Verify YBS native redesign
+on:
+  workflow_dispatch:
+    inputs:
+      source_tag:
+        description: 'Source prerelease tag'
+        required: true
+        default: 'source-v1.1.0'
+        type: string
+      source_asset:
+        description: 'Source ZIP asset'
+        required: true
+        default: 'YBS-Guide-Source-v1.1.0.zip'
+        type: string
+permissions:
+  contents: write
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Get verified source
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          YBS_TAG: ${{ inputs.source_tag }}
+          YBS_ASSET: ${{ inputs.source_asset }}
+        run: python3 scripts/fetch_release_source.py --release-tag "$YBS_TAG" --asset-name "$YBS_ASSET"
+      - name: Validate source data and sharing access controls
+        working-directory: ${{ steps.source.outputs.directory }}
+        run: |
+          python3 -m pip install beautifulsoup4
+          python3 scripts/validate_data.py | tee verification/data-validation-v1.1.0.txt
+          python3 scripts/validate_application_data.py | tee verification/app-data-validation-v1.1.0.txt
+          python3 scripts/validate_deduplication.py | tee verification/deduplication-tests-v1.1.0.txt
+          python3 -m unittest discover -s sharing-server -p test_server.py -v
+          python3 -m unittest discover -s verification -p test_github_publisher.py -q
+      - name: Build signed candidate and Android tests
+        working-directory: ${{ steps.source.outputs.directory }}
+        env:
+          YBS_RELEASE_KEYSTORE_B64: ${{ secrets.YBS_RELEASE_KEYSTORE_B64 }}
+          YBS_RELEASE_PASSWORD: ${{ secrets.YBS_RELEASE_PASSWORD }}
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' 'emulator' 'system-images;android-35;default;x86_64'
+          python3 - <<'PY'
+          import os,subprocess,sys
+          from pathlib import Path
+          from scripts.publish_github_release import private_signing
+          with private_signing(os.environ['RUNNER_TEMP'],os.environ.pop('YBS_RELEASE_KEYSTORE_B64'),os.environ.pop('YBS_RELEASE_PASSWORD')) as (store,password):
+              subprocess.run([sys.executable,'scripts/build_native.py','--sdk',os.environ['ANDROID_HOME'],'--keystore',str(store),'--password-file',str(password),'--with-qa'],check=True)
+          PY
+      - name: Native Android installed-app QA
+        working-directory: ${{ steps.source.outputs.directory }}
+        run: |
+          sudo chmod 666 /dev/kvm
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name ybs_qa --package 'system-images;android-35;default;x86_64'
+          python3 verification/run_android_qa.py
+      - name: Upload reviewable candidate and QA evidence
+        if: always() && steps.source.outputs.directory != ''
+        working-directory: ${{ steps.source.outputs.directory }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          YBS_TAG: ${{ inputs.source_tag }}
+        run: |
+          python3 - <<'PY'
+          import zipfile,os
+          from pathlib import Path
+          root=Path('.');out=Path(os.environ['RUNNER_TEMP'])/'YBS-Guide-QA-v1.1.0.zip'
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as z:
+              for f in Path('verification').rglob('*'):
+                  if f.is_file() and (f.suffix in ('.png','.txt','.json') and ('v1.1.0' in str(f) or 'qa-v1.1.0' in str(f))):z.write(f)
+              apk=Path('../delivery/YBS-Guide-v1.1.0.apk')
+              if apk.is_file():z.write(apk,apk.name)
+          PY
+          gh release upload "$YBS_TAG" "$RUNNER_TEMP/YBS-Guide-QA-v1.1.0.zip" --repo "$GITHUB_REPOSITORY"
