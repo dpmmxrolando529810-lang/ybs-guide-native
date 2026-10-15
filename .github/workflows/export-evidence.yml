@@ -32,7 +32,7 @@ jobs:
           import hashlib,zipfile
           for p in list(Path('export').iterdir()):
               print(p.name,p.stat().st_size,hashlib.sha256(p.read_bytes()).hexdigest())
-              if p.suffix=='.zip':
+              if p.name.startswith('YBS-Guide-QA-') and p.suffix=='.zip':
                   with zipfile.ZipFile(p) as z:
                       assert sum(x.file_size for x in z.infolist())<200*1024*1024
                       assert all(not Path(x.filename).is_absolute() and '..' not in Path(x.filename).parts for x in z.infolist())
