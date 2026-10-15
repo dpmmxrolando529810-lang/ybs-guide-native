@@ -10,10 +10,13 @@ class ApiError(Exception):
 
 def token_hash(token):return hashlib.sha256(token.encode()).hexdigest()
 class Store:
- def __init__(self,clock=time.time):self.clock=clock;self.rooms={};self.invites={};self.lock=threading.RLock();self.limits={};self.salt=secrets.token_bytes(32)
+ def __init__(self,clock=time.time):self.clock=clock;self.rooms={};self.invites={};self.lock=threading.RLock();self.limits={};self.salt=secrets.token_bytes(32);self.next_sweep=0
  def sweep(self):
   now=self.clock()
+  if now<self.next_sweep:return
+  self.next_sweep=now+30
   for rid,r in list(self.rooms.items()):
+   if r['point'] is not None and now-r['point']['updated_at']>90:r.update(point=None,active=False)
    if r['expires_at']<=now:self.invites.pop(r['invite'],None);del self.rooms[rid]
   for key,(stamp,count) in list(self.limits.items()):
    if now-stamp>65:del self.limits[key]
@@ -44,13 +47,14 @@ class Store:
    self.sweep();code=p.get('invite','')
    if not isinstance(code,str):raise ApiError(400,'Invalid invitation.')
    code=re.sub(r'[ -]','',code.upper());rid=self.invites.get(code);r=self.rooms.get(rid)
-   if not r or self.clock()>r['invite_until']:raise ApiError(404,'Invitation expired or unavailable.')
+   if not r or self.clock()>r['invite_until'] or self.clock()>=r['expires_at']:raise ApiError(404,'Invitation expired or unavailable.')
    if len(r['viewers'])>=5:raise ApiError(409,'This session already has five requests. Ask the sharer to remove one.')
    name=self.name(p.get('name',''));vid=secrets.token_urlsafe(18);token=secrets.token_urlsafe(32);challenge=f'{secrets.randbelow(1000000):06d}'
    r['viewers'][vid]=dict(id=vid,name=name,token=token_hash(token),state='pending',challenge=challenge)
    return dict(id=rid,viewer_id=vid,token=token,role='viewer',name=r['name'],challenge=challenge,expires_at=r['expires_at'])
  def authorized(self,rid,token):
   self.sweep();r=self.rooms.get(rid)
+  if r and r['expires_at']<=self.clock():self.invites.pop(r['invite'],None);del self.rooms[rid];r=None
   if not r:raise ApiError(410,'This sharing session has ended. Pair again to share.')
   digest=token_hash(token)
   if hmac.compare_digest(r['owner'],digest):return r,None
@@ -142,4 +146,10 @@ class BoundedServer(ThreadingHTTPServer):
  def process_request_thread(self,request,address):
   try:super().process_request_thread(request,address)
   finally:self.slots.release()
-if __name__=='__main__':BoundedServer(('0.0.0.0',int(os.getenv('PORT','10000'))),Handler).serve_forever()
+def cleanup():
+ while True:
+  time.sleep(30)
+  with STORE.lock:STORE.sweep()
+if __name__=='__main__':
+ threading.Thread(target=cleanup,daemon=True).start()
+ BoundedServer(('0.0.0.0',int(os.getenv('PORT','10000'))),Handler).serve_forever()
