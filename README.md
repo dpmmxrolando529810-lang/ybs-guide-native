@@ -4,9 +4,9 @@
 
 1.1.0 တွင် Light/Dark/System Theme၊ မြန်မာ/English၊ ကတ်သီးသန့်စာမျက်နှာ၊ bus logo အသစ်၊ Offline မြေပုံနှင့် အတည်ပြုချက်ဖြင့် တည်နေရာမျှဝေခြင်းတို့ ပါဝင်သည်။ App ထဲ ရှာဖွေခြင်း၊ ခရီးစဉ်တွက်ခြင်း၊ ရန်ကုန်အခြေခံမြေပုံ၊ GPS နှင့် ပါပြီးသားမှတ်တိုင်အသံကို အင်တာနက်မလိုဘဲ သုံးနိုင်သည်။ အသေးစိတ်မြေပုံကို ကြိုဒေါင်းရမည်။ ကတ်နံပါတ်ဖြင့် အွန်လိုင်းစစ်ခြင်း၊ တည်နေရာမျှဝေခြင်းနှင့် App update တွင် အင်တာနက်လိုသည်။
 
-မူရင်း Source ကို [source-v1.1.3](https://github.com/dpmmxrolando529810-lang/ybs-guide-native/releases/tag/source-v1.1.3) ရှိ **YBS-Guide-Source-v1.1.3.zip** မှ ယူပါ။ GitHub ၏ အလိုအလျောက် Source code archive နှင့် မတူပါ။ ZIP ထဲတွင် ဖိုင်တစ်ခုချင်း၏ SHA-256 စာရင်းပါသည်။ Stable APK ကို Android တွင် install စမ်းသပ်ပြီးမှ ထုတ်သည်။
+မူရင်း Source ကို [source-v1.1.4](https://github.com/dpmmxrolando529810-lang/ybs-guide-native/releases/tag/source-v1.1.4) ရှိ **YBS-Guide-Source-v1.1.4.zip** မှ ယူပါ။ GitHub ၏ အလိုအလျောက် Source code archive နှင့် မတူပါ။ ZIP ထဲတွင် ဖိုင်တစ်ခုချင်း၏ SHA-256 စာရင်းပါသည်။ Stable APK ကို Android တွင် install စမ်းသပ်ပြီးမှ ထုတ်သည်။
 
-နောက်ဗားရှင်းထုတ်ရန် ဖုန်း Browser မှ **Actions → Publish YBS Android update → Run workflow** ကိုဖွင့်ပါ။ မသုံးရသေးသော Version name နှင့် ပြောင်းလဲချက်ကို ဖြည့်ပြီး Run workflow နှိပ်ပါ။ 1.1.0/code19 ထွက်ပြီးနောက် Version code ကို အလွတ်ထားလျှင် အလိုအလျောက်တိုးပေးမည်။ မူလ signing configuration ကို encrypted Actions secrets တွင် ချိတ်ပြီးဖြစ်သည်။ ကုဒ်ပြောင်းလျှင် Source ZIP အသစ်ကို prerelease တင်ပြီး tag/filename အသစ်ကို ရွေးပါ။ Private signing ဖိုင်များကို public asset မတင်ပါနှင့်။
+နောက်ဗားရှင်းထုတ်ရန် ဖုန်း Browser မှ **Actions → Publish YBS Android update → Run workflow** ကိုဖွင့်ပါ။ မသုံးရသေးသော Version name နှင့် ပြောင်းလဲချက်ကို ဖြည့်ပြီး Run workflow နှိပ်ပါ။ 1.1.0/code20 ထွက်ပြီးနောက် Version code ကို အလွတ်ထားလျှင် အလိုအလျောက်တိုးပေးမည်။ မူလ signing configuration ကို encrypted Actions secrets တွင် ချိတ်ပြီးဖြစ်သည်။ ကုဒ်ပြောင်းလျှင် Source ZIP အသစ်ကို prerelease တင်ပြီး tag/filename အသစ်ကို ရွေးပါ။ Private signing ဖိုင်များကို public asset မတင်ပါနှင့်။
 
 အသုံးပြုသူက **ဆက်တင် → App update → Update တင်မည်** ကို နှိပ်နိုင်သည်။ App က ပါပြီးသား HTTPS feed ကိုစစ်၊ APK ဒေါင်း၊ စစ်ဆေးပြီး Android installer ဖွင့်ပေးမည်။ Android က ခွင့်ပြုချက်/Install အတည်ပြုချက် တောင်းနိုင်သည်။
 
