@@ -5,12 +5,12 @@ on:
       source_tag:
         description: 'Source prerelease tag'
         required: true
-        default: 'source-v1.1.0'
+        default: 'source-v1.1.1'
         type: string
       source_asset:
         description: 'Source ZIP asset'
         required: true
-        default: 'YBS-Guide-Source-v1.1.0.zip'
+        default: 'YBS-Guide-Source-v1.1.1.zip'
         type: string
 permissions:
   contents: write
@@ -18,6 +18,8 @@ jobs:
   android:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
+    env:
+      ANDROID_AVD_HOME: ${{ runner.temp }}/ybs-avd
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -36,7 +38,9 @@ jobs:
       - name: Validate source data and sharing access controls
         working-directory: ${{ steps.source.outputs.directory }}
         run: |
+          set -euo pipefail
           python3 -m pip install beautifulsoup4
+          python3 -m unittest discover -s verification -p test_asset_contracts.py -v
           python3 scripts/validate_data.py | tee verification/data-validation-v1.1.0.txt
           python3 scripts/validate_application_data.py | tee verification/app-data-validation-v1.1.0.txt
           python3 scripts/validate_deduplication.py | tee verification/deduplication-tests-v1.1.0.txt
@@ -60,7 +64,15 @@ jobs:
         working-directory: ${{ steps.source.outputs.directory }}
         run: |
           sudo chmod 666 /dev/kvm
-          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name ybs_qa --package 'system-images;android-35;default;x86_64'
+          mkdir -p "$ANDROID_AVD_HOME"
+          timeout 120 "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name ybs_qa --path "$ANDROID_AVD_HOME/ybs_qa.avd" --device pixel_2 --package 'system-images;android-35;default;x86_64' < /dev/null
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path(os.environ['ANDROID_AVD_HOME']);(p/'ybs_qa.ini').write_text('avd.ini.encoding=UTF-8\npath='+str(p/'ybs_qa.avd')+'\ntarget=android-35\n')
+          assert (p/'ybs_qa.avd/config.ini').is_file(), 'AVD config was not created'
+          PY
+          "$ANDROID_HOME/emulator/emulator" -list-avds
           python3 verification/run_android_qa.py
       - name: Upload reviewable candidate and QA evidence
         if: always() && steps.source.outputs.directory != ''
