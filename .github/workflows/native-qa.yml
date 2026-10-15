@@ -18,8 +18,6 @@ jobs:
   android:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
-    env:
-      ANDROID_AVD_HOME: ${{ runner.temp }}/ybs-avd
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -62,6 +60,8 @@ jobs:
           PY
       - name: Native Android installed-app QA
         working-directory: ${{ steps.source.outputs.directory }}
+        env:
+          ANDROID_AVD_HOME: ${{ runner.temp }}/ybs-avd
         run: |
           sudo chmod 666 /dev/kvm
           mkdir -p "$ANDROID_AVD_HOME"
