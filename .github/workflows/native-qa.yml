@@ -5,12 +5,12 @@ on:
       source_tag:
         description: 'Source prerelease tag'
         required: true
-        default: 'source-v1.1.4'
+        default: 'source-v1.1.5'
         type: string
       source_asset:
         description: 'Source ZIP asset'
         required: true
-        default: 'YBS-Guide-Source-v1.1.4.zip'
+        default: 'YBS-Guide-Source-v1.1.5.zip'
         type: string
 permissions:
   contents: write
@@ -39,9 +39,10 @@ jobs:
           set -euo pipefail
           python3 -m pip install beautifulsoup4
           python3 -m unittest discover -s verification -p test_asset_contracts.py -v
-          python3 scripts/validate_data.py | tee verification/data-validation-v1.1.0.txt
-          python3 scripts/validate_application_data.py | tee verification/app-data-validation-v1.1.0.txt
-          python3 scripts/validate_deduplication.py | tee verification/deduplication-tests-v1.1.0.txt
+          python3 -m unittest discover -s verification -p test_unified_data.py -v
+          python3 scripts/validate_data.py | tee verification/data-validation-v1.1.1.txt
+          python3 scripts/validate_application_data.py | tee verification/app-data-validation-v1.1.1.txt
+          python3 scripts/validate_deduplication.py | tee verification/deduplication-tests-v1.1.1.txt
           python3 -m unittest discover -s sharing-server -p test_server.py -v
           python3 -m unittest discover -s verification -p test_github_publisher.py -q
       - name: Build signed candidate and Android tests
@@ -84,11 +85,11 @@ jobs:
           python3 - <<'PY'
           import zipfile,os
           from pathlib import Path
-          root=Path('.');out=Path(os.environ['RUNNER_TEMP'])/'YBS-Guide-QA-v1.1.0.zip'
+          root=Path('.');out=Path(os.environ['RUNNER_TEMP'])/'YBS-Guide-QA-v1.1.1.zip'
           with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as z:
               for f in Path('verification').rglob('*'):
-                  if f.is_file() and (f.suffix in ('.png','.txt','.json') and ('v1.1.0' in str(f) or 'qa-v1.1.0' in str(f))):z.write(f)
-              apk=Path('../delivery/YBS-Guide-v1.1.0.apk')
+                  if f.is_file() and (f.suffix in ('.png','.txt','.json') and ('v1.1.1' in str(f) or 'qa-v1.1.1' in str(f))):z.write(f)
+              apk=Path('../delivery/YBS-Guide-v1.1.1.apk')
               if apk.is_file():z.write(apk,apk.name)
           PY
-          gh release upload "$YBS_TAG" "$RUNNER_TEMP/YBS-Guide-QA-v1.1.0.zip" --repo "$GITHUB_REPOSITORY"
+          gh release upload "$YBS_TAG" "$RUNNER_TEMP/YBS-Guide-QA-v1.1.1.zip" --repo "$GITHUB_REPOSITORY"
